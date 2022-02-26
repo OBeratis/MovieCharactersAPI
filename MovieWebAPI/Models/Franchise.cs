@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MovieApp.Models
+namespace MovieWebAPI.Models
 {
     [Table("Franchise")]
     public class Franchise
@@ -17,7 +13,7 @@ namespace MovieApp.Models
         [MaxLength(50)]
         public string Name { get; set; }
         [MaxLength(100)]
-	    public string Description { get; set; }
+        public string Description { get; set; }
         public ICollection<Movie> Movies { get; set; }
     }
 }
