@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieWebAPI.Models;
+using MovieWebAPI.DTO;
+using MovieWebAPI.Services;
 
 namespace MovieWebAPI.Controllers
 {
@@ -14,6 +16,7 @@ namespace MovieWebAPI.Controllers
     public class FranchiseController : ControllerBase
     {
         private readonly MovieDbContext _context;
+        private readonly IFranchiseService _franchiseService;
 
         public FranchiseController(MovieDbContext context)
         {
@@ -107,7 +110,34 @@ namespace MovieWebAPI.Controllers
         [HttpPut("{id}/movies")]
         public async Task<IActionResult> UpdateFranchiseMovies(int id, List<int> movies)
         {
-            await Task.Delay(1000);
+            if (!_franchiseService.FranchiseExists(id))
+            {
+                return NotFound();
+            }
+            
+            
+            Franchise franchiseToUpdateMovies = await _context.Franchises
+                .Include(f => f.Movies)
+                .Where(f => f.Id == id)
+                .FirstAsync();
+
+            if (franchiseToUpdateMovies == null)
+            {
+                List<Movie> moviesToUpdate = new List<Movie>();
+                foreach (var movieId in movies)
+                {
+                    Movie movie = await _context.Movies.FindAsync(movieId);
+                    if (movie == null)
+                    {
+                        throw new KeyNotFoundException();
+                    }
+
+                    moviesToUpdate.Add(movie);
+                }
+
+                franchiseToUpdateMovies.Movies = moviesToUpdate;
+                await _context.SaveChangesAsync();
+            }
 
             return NoContent();
         }

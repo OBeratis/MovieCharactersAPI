@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using MovieWebAPI.Services;
 
 namespace MovieWebAPI
 {
@@ -36,6 +37,9 @@ namespace MovieWebAPI
             );
 
             services.AddAutoMapper(typeof(Startup));
+
+            services.AddScoped(typeof(IMovieService), typeof(MovieService));
+            services.AddScoped(typeof(IFranchiseService), typeof(FranchiseService));
 
             services.AddSwaggerGen(c =>
             {

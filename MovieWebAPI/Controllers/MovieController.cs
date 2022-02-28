@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieWebAPI.Models;
 using MovieWebAPI.DTO;
+using MovieWebAPI.Services;
 
 namespace MovieWebAPI.Controllers
 {
@@ -17,6 +18,7 @@ namespace MovieWebAPI.Controllers
     {
         private readonly MovieDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IMovieService _movieService;
 
         public MovieController(MovieDbContext context, IMapper mapper)
         {
@@ -28,6 +30,7 @@ namespace MovieWebAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<MovieEditDTO>>> GetMovies()
         {
+            // return await _context.Movies.ToListAsync();
             return _mapper.Map<List<MovieEditDTO>>(await _context.Movies.Include(c => c.Characters).ToListAsync());
         }
 
@@ -111,7 +114,32 @@ namespace MovieWebAPI.Controllers
         [HttpPut("{id}/characters")]
         public async Task<IActionResult> UpdateMovieCharacters(int id, List<int> characters)
         {
-            await Task.Delay(1000);
+            if (!_movieService.MovieExists(id))
+            {
+                return NotFound();
+            }
+
+            Movie movieToUpdateCharacters = await _context.Movies
+                .Include(m => m.Characters)
+                .Where(m => m.Id == id)
+                .FirstAsync();
+
+            if (movieToUpdateCharacters != null)
+            {
+                List<Character> charactersToUpdate = new List<Character>();
+                foreach (int characterId in characters)
+                {
+                    Character character = await _context.Characters.FindAsync(characterId);
+                    if (character == null)
+                    {
+                        throw new KeyNotFoundException();
+                    }
+                    charactersToUpdate.Add(character);
+                }
+
+                movieToUpdateCharacters.Characters = charactersToUpdate;
+                await _context.SaveChangesAsync();
+            }
 
             return NoContent();
         }
